@@ -1,11 +1,12 @@
 FROM golang:latest
 
-WORKDIR /usr/src/app
+WORKDIR /app
 
-COPY go.mod go.sum ./
+copy go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN go build -v -o /usr/local/bin/app ./...
+COPY .env .
+RUN go build app/main.go
 
-CMD ["app"]
+CMD ["./main"]
