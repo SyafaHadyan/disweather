@@ -9,10 +9,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/SyafaHadyan/disweather/internal/handler/interactionrespond"
 	"github.com/bwmarrin/discordgo"
 )
 
 type weatherData struct {
+	Name           string
 	Lat            float32 `json:"lat"`
 	Lon            float32 `json:"lon"`
 	TimeZone       string  `json:"timezone"`
@@ -39,23 +41,12 @@ type weatherData struct {
 }
 
 type geocodeData []struct {
-	Lat float32 `json:"lat"`
-	Lon float32 `json:"lon"`
+	Name string  `json:"name"`
+	Lat  float32 `json:"lat"`
+	Lon  float32 `json:"lon"`
 }
 
-func sessionRespond(s *discordgo.Session, i *discordgo.InteractionCreate, message string) {
-	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: message,
-		},
-	})
-	if err != nil {
-		log.Panicf("could not respond to interaction: %s", err)
-	}
-}
-
-func getGeocode(query string, apiKey string) (string, string) {
+func getGeocode(query string, apiKey string) (string, string, string) {
 	var geocodeDataRes geocodeData
 	url := fmt.Sprintf(
 		"http://api.openweathermap.org/geo/1.0/direct?q=%s&appid=%s",
@@ -66,38 +57,39 @@ func getGeocode(query string, apiKey string) (string, string) {
 	res, err := http.Get(url)
 	if err != nil {
 		log.Println(err)
-		return "", ""
+		return "", "", ""
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		log.Println(err)
-		return "", ""
+		return "", "", ""
 	}
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil || body == nil {
 		log.Println(err)
-		return "", ""
+		return "", "", ""
 	}
 
 	err = json.Unmarshal(body, &geocodeDataRes)
 	if err != nil {
 		log.Println(err)
-		return "", ""
+		return "", "", ""
 	}
 
 	if len(geocodeDataRes) == 0 {
-		return "", ""
+		return "", "", ""
 	}
 
-	return strconv.FormatFloat(float64(geocodeDataRes[0].Lat), 'f', -1, 32),
+	return geocodeDataRes[0].Name,
+		strconv.FormatFloat(float64(geocodeDataRes[0].Lat), 'f', -1, 32),
 		strconv.FormatFloat(float64(geocodeDataRes[0].Lon), 'f', -1, 32)
 }
 
 func getWeather(query string, apiKey string) weatherData {
 	var weatherDataRes weatherData
-	lat, lon := getGeocode(query, apiKey)
+	name, lat, lon := getGeocode(query, apiKey)
 	if lat == "" || lon == "" {
 		return weatherData{}
 	}
@@ -130,6 +122,8 @@ func getWeather(query string, apiKey string) weatherData {
 		return weatherData{}
 	}
 
+	weatherDataRes.Name = name
+
 	err = json.Unmarshal(body, &weatherDataRes)
 	if err != nil {
 		log.Println(err)
@@ -144,6 +138,8 @@ func HandleWeahter(
 	i *discordgo.InteractionCreate,
 	opts map[string]*discordgo.ApplicationCommandInteractionDataOption,
 	apiKey string,
+	author string,
+	displayAuthor bool,
 ) {
 	builder := new(strings.Builder)
 	query, ok := opts["query"]
@@ -151,19 +147,28 @@ func HandleWeahter(
 		return
 	}
 
+	if displayAuthor {
+		writeAuthor := fmt.Sprintf("Bot made by **%s**\n\n", author)
+		builder.WriteString(writeAuthor)
+	}
+
 	weatherDataRes := getWeather(query.StringValue(), apiKey)
 	if len(weatherDataRes.Current.Weather) == 0 {
-		sessionRespond(s, i, "Bot made by syafahr\n\nfailed to get weather data\nPossible reason:\n\n- Invalid query\n- API limit")
+		stringRespFailure := "Failed to get weather data\nPossible reason:\n\n- Invalid query\n- API limit"
+
+		builder.WriteString(stringRespFailure)
+
+		interactionrespond.InteractionRespond(s, i, builder.String(), "weather")
 		return
 	}
 
 	res := fmt.Sprintf(
-		"Bot made by syafahr\n\n"+
-			"Lat: %.2f\nLon: %.2f\nTime Zone: %s\nTime Zone Offset: %d\n"+
+		"Name: %s\nLat: %.2f\nLon: %.2f\nTime Zone: %s\nTime Zone Offset: %d\n"+
 			"- Sunrise: %d\n- Sunset: %d\n- Temp: %.2f °C\n- Feels Like: %.2f °C\n"+
-			"- Pressure: %.2f hPa\n- Humidity: %.2f%%\n- Dew Point: %.2f °C\n- UVI: %.2f\n"+
-			"- Clouds: %.2f %%\n- Visibility: %.2f\n- Wind Speed: %.2f m/s\n- Wind Deg: %.2f\n"+
+			"- Pressure: %.2f hPa\n- Humidity: %.2f %%\n- Dew Point: %.2f °C\n- UVI: %.2f\n"+
+			"- Clouds: %.2f %%\n- Visibility: %.2f\n m- Wind Speed: %.2f m/s\n- Wind Deg: %.2f\n"+
 			"- Wind Gust: %.2f m/s\n  - Main: %s\n  - Description: %s\n",
+		weatherDataRes.Name,
 		weatherDataRes.Lat,
 		weatherDataRes.Lon,
 		weatherDataRes.TimeZone,
@@ -187,5 +192,5 @@ func HandleWeahter(
 
 	builder.WriteString(res)
 
-	sessionRespond(s, i, builder.String())
+	interactionrespond.InteractionRespond(s, i, builder.String(), "weather")
 }
