@@ -14,6 +14,7 @@ import (
 )
 
 type weatherData struct {
+	Name           string
 	Lat            float32 `json:"lat"`
 	Lon            float32 `json:"lon"`
 	TimeZone       string  `json:"timezone"`
@@ -40,11 +41,12 @@ type weatherData struct {
 }
 
 type geocodeData []struct {
-	Lat float32 `json:"lat"`
-	Lon float32 `json:"lon"`
+	Name string  `json:"name"`
+	Lat  float32 `json:"lat"`
+	Lon  float32 `json:"lon"`
 }
 
-func getGeocode(query string, apiKey string) (string, string) {
+func getGeocode(query string, apiKey string) (string, string, string) {
 	var geocodeDataRes geocodeData
 	url := fmt.Sprintf(
 		"http://api.openweathermap.org/geo/1.0/direct?q=%s&appid=%s",
@@ -55,38 +57,39 @@ func getGeocode(query string, apiKey string) (string, string) {
 	res, err := http.Get(url)
 	if err != nil {
 		log.Println(err)
-		return "", ""
+		return "", "", ""
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
 		log.Println(err)
-		return "", ""
+		return "", "", ""
 	}
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil || body == nil {
 		log.Println(err)
-		return "", ""
+		return "", "", ""
 	}
 
 	err = json.Unmarshal(body, &geocodeDataRes)
 	if err != nil {
 		log.Println(err)
-		return "", ""
+		return "", "", ""
 	}
 
 	if len(geocodeDataRes) == 0 {
-		return "", ""
+		return "", "", ""
 	}
 
-	return strconv.FormatFloat(float64(geocodeDataRes[0].Lat), 'f', -1, 32),
+	return geocodeDataRes[0].Name,
+		strconv.FormatFloat(float64(geocodeDataRes[0].Lat), 'f', -1, 32),
 		strconv.FormatFloat(float64(geocodeDataRes[0].Lon), 'f', -1, 32)
 }
 
 func getWeather(query string, apiKey string) weatherData {
 	var weatherDataRes weatherData
-	lat, lon := getGeocode(query, apiKey)
+	name, lat, lon := getGeocode(query, apiKey)
 	if lat == "" || lon == "" {
 		return weatherData{}
 	}
@@ -118,6 +121,8 @@ func getWeather(query string, apiKey string) weatherData {
 		log.Println(err)
 		return weatherData{}
 	}
+
+	weatherDataRes.Name = name
 
 	err = json.Unmarshal(body, &weatherDataRes)
 	if err != nil {
@@ -158,11 +163,12 @@ func HandleWeahter(
 	}
 
 	res := fmt.Sprintf(
-		"Lat: %.2f\nLon: %.2f\nTime Zone: %s\nTime Zone Offset: %d\n"+
+		"Name: %s\nLat: %.2f\nLon: %.2f\nTime Zone: %s\nTime Zone Offset: %d\n"+
 			"- Sunrise: %d\n- Sunset: %d\n- Temp: %.2f °C\n- Feels Like: %.2f °C\n"+
 			"- Pressure: %.2f hPa\n- Humidity: %.2f %%\n- Dew Point: %.2f °C\n- UVI: %.2f\n"+
 			"- Clouds: %.2f %%\n- Visibility: %.2f\n m- Wind Speed: %.2f m/s\n- Wind Deg: %.2f\n"+
 			"- Wind Gust: %.2f m/s\n  - Main: %s\n  - Description: %s\n",
+		weatherDataRes.Name,
 		weatherDataRes.Lat,
 		weatherDataRes.Lon,
 		weatherDataRes.TimeZone,
