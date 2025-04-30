@@ -160,8 +160,8 @@ func HandleWeahter(
 	res := fmt.Sprintf(
 		"Lat: %.2f\nLon: %.2f\nTime Zone: %s\nTime Zone Offset: %d\n"+
 			"- Sunrise: %d\n- Sunset: %d\n- Temp: %.2f °C\n- Feels Like: %.2f °C\n"+
-			"- Pressure: %.2f hPa\n- Humidity: %.2f%%\n- Dew Point: %.2f °C\n- UVI: %.2f\n"+
-			"- Clouds: %.2f %%\n- Visibility: %.2f\n- Wind Speed: %.2f m/s\n- Wind Deg: %.2f\n"+
+			"- Pressure: %.2f hPa\n- Humidity: %.2f %%\n- Dew Point: %.2f °C\n- UVI: %.2f\n"+
+			"- Clouds: %.2f %%\n- Visibility: %.2f\n m- Wind Speed: %.2f m/s\n- Wind Deg: %.2f\n"+
 			"- Wind Gust: %.2f m/s\n  - Main: %s\n  - Description: %s\n",
 		weatherDataRes.Lat,
 		weatherDataRes.Lon,
