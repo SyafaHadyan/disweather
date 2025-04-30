@@ -53,9 +53,20 @@ func (b *Bot) Start() {
 
 		switch data.Name {
 		case "echo":
-			echo.HandleEcho(s, i, opMap)
+			echo.HandleEcho(
+				s,
+				i,
+				opMap,
+			)
 		case "weather":
-			weather.HandleWeahter(s, i, opMap, b.Config.OpenWeatherAPI)
+			weather.HandleWeahter(
+				s,
+				i,
+				opMap,
+				b.Config.OpenWeatherAPI,
+				b.Config.Author,
+				b.Config.DisplayAuthor,
+			)
 		default:
 			return
 		}

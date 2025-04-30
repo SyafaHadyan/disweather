@@ -133,6 +133,8 @@ func HandleWeahter(
 	i *discordgo.InteractionCreate,
 	opts map[string]*discordgo.ApplicationCommandInteractionDataOption,
 	apiKey string,
+	author string,
+	displayAuthor bool,
 ) {
 	builder := new(strings.Builder)
 	query, ok := opts["query"]
@@ -140,15 +142,23 @@ func HandleWeahter(
 		return
 	}
 
+	if displayAuthor {
+		writeAuthor := fmt.Sprintf("Bot made by **%s**\n\n", author)
+		builder.WriteString(writeAuthor)
+	}
+
 	weatherDataRes := getWeather(query.StringValue(), apiKey)
 	if len(weatherDataRes.Current.Weather) == 0 {
-		interactionrespond.InteractionRespond(s, i, "Failed to get weather data\nPossible reason:\n\n- Invalid query\n- API limit", "weather")
+		stringRespFailure := "Failed to get weather data\nPossible reason:\n\n- Invalid query\n- API limit"
+
+		builder.WriteString(stringRespFailure)
+
+		interactionrespond.InteractionRespond(s, i, builder.String(), "weather")
 		return
 	}
 
 	res := fmt.Sprintf(
-		"Bot made by syafahr\n\n"+
-			"Lat: %.2f\nLon: %.2f\nTime Zone: %s\nTime Zone Offset: %d\n"+
+		"Lat: %.2f\nLon: %.2f\nTime Zone: %s\nTime Zone Offset: %d\n"+
 			"- Sunrise: %d\n- Sunset: %d\n- Temp: %.2f °C\n- Feels Like: %.2f °C\n"+
 			"- Pressure: %.2f hPa\n- Humidity: %.2f%%\n- Dew Point: %.2f °C\n- UVI: %.2f\n"+
 			"- Clouds: %.2f %%\n- Visibility: %.2f\n- Wind Speed: %.2f m/s\n- Wind Deg: %.2f\n"+

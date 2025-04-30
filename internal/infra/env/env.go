@@ -12,6 +12,8 @@ type Env struct {
 	ApplicationID  string `env:"APPLICATION_ID"`
 	GuildID        string `env:"GUILD_ID"`
 	OpenWeatherAPI string `env:"OPENWEATHER_API"`
+	Author         string `env:"AUTHOR"`
+	DisplayAuthor  bool   `env:"DISPLAY_AUTHOR"`
 }
 
 func New() (*Env, error) {
