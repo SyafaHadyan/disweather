@@ -4,7 +4,7 @@
 
 <img src="./docs/pictures/profile.jpg" width=50% height=50%>
 
-> [source](<https://www.pixiv.net/en/users/37929892>)
+> [image source](<https://www.pixiv.net/en/users/37929892>)
 
 ### Docker
 
