@@ -39,7 +39,7 @@ func (b *Bot) parseOptions(options []*discordgo.ApplicationCommandInteractionDat
 
 func (b *Bot) Start() {
 	if b.Config.ApplicationID == "" {
-		log.Fatal("application id is not set")
+		log.Fatal("Application id is not set")
 	}
 
 	b.Session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -70,12 +70,12 @@ func (b *Bot) Start() {
 		b.Config.GuildID,
 		command.Commands)
 	if err != nil {
-		log.Fatalf("could not register commands: %s", err)
+		log.Fatalf("Could not register commands: %s", err)
 	}
 
 	err = b.Session.Open()
 	if err != nil {
-		log.Fatalf("could not open session: %s", err)
+		log.Fatalf("Could not open session: %s", err)
 	}
 
 	sigch := make(chan os.Signal, 1)
@@ -84,6 +84,8 @@ func (b *Bot) Start() {
 
 	err = b.Session.Close()
 	if err != nil {
-		log.Printf("could not close session gracefully: %s", err)
+		log.Printf("Could not close session gracefully: %s", err)
 	}
+
+	log.Println("Successfully closed session")
 }

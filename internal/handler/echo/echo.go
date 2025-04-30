@@ -1,9 +1,9 @@
 package echo
 
 import (
-	"log"
 	"strings"
 
+	"github.com/SyafaHadyan/disweather/internal/handler/interactionrespond"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -26,13 +26,5 @@ func HandleEcho(
 	}
 	builder.WriteString(opts["message"].StringValue())
 
-	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: builder.String(),
-		},
-	})
-	if err != nil {
-		log.Panicf("could not respond to interaction: %s", err)
-	}
+	interactionrespond.InteractionRespond(s, i, builder.String(), "echo")
 }

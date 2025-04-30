@@ -17,16 +17,18 @@ type Env struct {
 func New() (*Env, error) {
 	err := godotenv.Load()
 	if err != nil {
-		log.Println(err)
+		log.Fatalf("Failed to load env: %s", err)
 		return nil, err
 	}
 
 	envParse := new(Env)
 	err = env.Parse(envParse)
 	if err != nil {
-		log.Println(err)
+		log.Fatalf("Failed to parse env: %s", err)
 		return nil, err
 	}
+
+	log.Println("Loaded env")
 
 	return envParse, nil
 }

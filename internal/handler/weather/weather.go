@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/SyafaHadyan/disweather/internal/handler/interactionrespond"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -41,18 +42,6 @@ type weatherData struct {
 type geocodeData []struct {
 	Lat float32 `json:"lat"`
 	Lon float32 `json:"lon"`
-}
-
-func sessionRespond(s *discordgo.Session, i *discordgo.InteractionCreate, message string) {
-	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{
-			Content: message,
-		},
-	})
-	if err != nil {
-		log.Panicf("could not respond to interaction: %s", err)
-	}
 }
 
 func getGeocode(query string, apiKey string) (string, string) {
@@ -153,7 +142,7 @@ func HandleWeahter(
 
 	weatherDataRes := getWeather(query.StringValue(), apiKey)
 	if len(weatherDataRes.Current.Weather) == 0 {
-		sessionRespond(s, i, "Bot made by syafahr\n\nfailed to get weather data\nPossible reason:\n\n- Invalid query\n- API limit")
+		interactionrespond.InteractionRespond(s, i, "Failed to get weather data\nPossible reason:\n\n- Invalid query\n- API limit", "weather")
 		return
 	}
 
@@ -187,5 +176,5 @@ func HandleWeahter(
 
 	builder.WriteString(res)
 
-	sessionRespond(s, i, builder.String())
+	interactionrespond.InteractionRespond(s, i, builder.String(), "weather")
 }
