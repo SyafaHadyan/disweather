@@ -2,7 +2,7 @@
 
 ## Discord Weather bot
 
-<img src="./docs/pictures/profile.jpg" size=50%>
+<img src="./docs/pictures/profile.jpg" size=25%>
 
 >> <https://www.pixiv.net/en/users/37929892>
 
